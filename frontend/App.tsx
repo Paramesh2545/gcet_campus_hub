@@ -22,6 +22,7 @@ import DevAdminProfile from './components/DevAdminProfile';
 import AllAnnualEvents from './components/AllAnnualEvents';
 import AnnualEventDetail from './components/AnnualEventDetail';
 import AllNotifications from './components/AllNotifications';
+import LaunchPage from './components/LaunchPage';
 
 const ScrollToTop = () => {
     const { pathname } = useLocation();
@@ -290,7 +291,7 @@ const App: React.FC = () => {
       alert(`Error: ${error.message || 'Failed to assign contributor role'}`);
     }
   };
-  const handleCreateClub = async (newClubData: { name: string; tagline: string }, assignedAdminId: string) => {
+  const handleCreateClub = async (newClubData: { name: string; tagline: string; category?: string }, assignedAdminId: string) => {
     if (!user?.id) {
       alert('You must be logged in as admin to create a club');
       return;
@@ -507,6 +508,7 @@ const App: React.FC = () => {
             <Route path="/opportunities" element={<ExternalEvents externalEvents={externalEvents} />} />
             <Route path="/news" element={<News news={news} />} />
             <Route path="/profile" element={<ProfileWrapper />} />
+            <Route path='/launch' element={<LaunchPage onLaunchComplete={() => navigate('/')} />} />
             <Route path="/notifications" element={<AllNotifications notifications={userNotifications} onMarkAsRead={handleMarkAsRead} />} />
             <Route path="*" element={<Navigate to="/" replace />} />    
         </Routes>

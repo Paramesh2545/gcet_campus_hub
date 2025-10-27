@@ -6,14 +6,14 @@ const DEVELOPERS = [
   {
     id: 1,
     name: 'K. Parameshwara Rao',
-    title: 'Full Stack Developer & System Architect',
-    imageUrl: 'https://i.postimg.cc/h4k83b79/passport-size-pic.jpg',
+    title: 'Developed the Frontend and Backend of the website',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/evnty-124fb.firebasestorage.app/o/WhatsApp%20Image%202025-06-06%20at%2011.44.04%20(1).jpeg?alt=media&token=a9469518-ac2f-49e6-b5b0-c09e5e713f12',
   },
   {
     id: 2,
     name: 'Pavan Bejawada',
-    title: 'Frontend Developer & UI/UX Direction',
-    imageUrl: 'https://picsum.photos/seed/pavanbejawada/200/200',
+    title: 'Designed and Developed the Frontend of the website',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/evnty-124fb.firebasestorage.app/o/pavan_image.jpeg?alt=media&token=384136d9-6282-4797-88c9-2a113b86b2ac',
   },
 ];
 

@@ -13,6 +13,18 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      server: {
+        hmr: {
+          clientPort: 443,
+        },
+        host: true, // Listen on all addresses
+        allowedHosts: [
+          'https://paramesh2545.github.io/gcet_campus_hub',
+          'https://chewy-jacquelyn-unpontifically.ngrok-free.dev',
+          'https://.ngrok-free.dev', // Allow all ngrok hosts
+          'https://.ngrok.io', // Allow legacy ngrok hosts
+        ]
       }
     };
 });

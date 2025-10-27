@@ -378,6 +378,7 @@ export const createClub = async (
     team?: ClubTeamMember[];
     recruitmentOpen?: boolean;
     recruitmentQuestions?: string[];
+    category?: string;
   },
   assignedAdminId: string,
   requesterId: string
@@ -399,7 +400,8 @@ export const createClub = async (
     achievements: newClubData.achievements ?? [],
     team: newClubData.team ?? [],
     recruitmentOpen: newClubData.recruitmentOpen,
-    recruitmentQuestions: newClubData.recruitmentQuestions
+    recruitmentQuestions: newClubData.recruitmentQuestions,
+    category: newClubData.category ?? 'Technical'
   } as any;
 
   const clubRef = await addDoc(collection(db, 'clubs'), defaultClub);

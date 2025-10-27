@@ -61,6 +61,7 @@ export interface Club {
   team: ClubTeamMember[];
   recruitmentOpen?: boolean;
   recruitmentQuestions?: string[];
+  category?: string;
 }
 
 export interface ExternalEvent {

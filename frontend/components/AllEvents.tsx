@@ -28,6 +28,15 @@ const AllEvents: React.FC<AllEventsProps> = ({ events, clubs, registrations = {}
     });
   }, [searchTerm, selectedClub, selectedCategory, events]);
 
+  function sortByDateDesc(arr: { date: string }[]) {
+    return arr.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }
+  
+
+  const sortedFilteredEvents = sortByDateDesc(filteredEvents);
+
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
       <SectionHeader 
@@ -66,8 +75,8 @@ const AllEvents: React.FC<AllEventsProps> = ({ events, clubs, registrations = {}
 
       {/* Events List */}
       <div className="space-y-8">
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
+        {sortedFilteredEvents.length > 0 ? (
+          sortedFilteredEvents.map((event) => (
             <EventCard 
               key={event.id} 
               event={event} 

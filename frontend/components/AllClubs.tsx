@@ -20,6 +20,7 @@ interface AllClubsProps {
     team?: ClubTeamMember[];
     recruitmentOpen?: boolean;
     recruitmentQuestions?: string[];
+    category?: string;
   }, assignedAdminId: string) => void;
 }
 
@@ -96,7 +97,7 @@ const CreateClubModal: React.FC<{
                 team: [{ id: foundStudent.id!, name: foundStudent.name, position: 'Admin' }],
                 recruitmentOpen,
                 recruitmentQuestions,
-                category // <-- Pass category
+                category
             }, foundStudent.id!);
         }
     };
@@ -293,9 +294,9 @@ const AllClubs: React.FC<AllClubsProps> = ({ clubs, user, allUsers, applications
   //we are here
   const students = useMemo(() => allUsers.filter(u => u.role === 'student'), [allUsers]);
   
-  const technicalClubs = clubs.filter(c => ['robotics', 'coding', 'aiml'].includes(c.id));
-  const culturalClubs = clubs.filter(c => ['cultural'].includes(c.id));
-  const otherClubs = clubs.filter(c => !['robotics', 'coding', 'aiml', 'cultural'].includes(c.id));
+  const technicalClubs = clubs.filter(c => c.category === "Technical");
+  const culturalClubs = clubs.filter(c => c.category === "Cultural");
+  const otherClubs = clubs.filter(c => c.category === "Other");
 
   return (
     <section className="py-16 relative container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

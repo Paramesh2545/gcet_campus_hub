@@ -20,10 +20,10 @@ export default defineConfig(({ mode }) => {
         },
         host: true, // Listen on all addresses
         allowedHosts: [
-          'https://paramesh2545.github.io/gcet_campus_hub',
-          'https://chewy-jacquelyn-unpontifically.ngrok-free.dev',
-          'https://.ngrok-free.dev', // Allow all ngrok hosts
-          'https://.ngrok.io', // Allow legacy ngrok hosts
+          'paramesh2545.github.io',
+          'chewy-jacquelyn-unpontifically.ngrok-free.dev',
+          '.ngrok-free.dev', // Allow all ngrok hosts
+          '.ngrok.io', // Allow legacy ngrok hosts
         ]
       }
     };

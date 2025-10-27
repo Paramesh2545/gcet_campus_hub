@@ -11,7 +11,7 @@
     "install-all": "npm run install-frontend && npm run install-backend",
     "deploy-functions": "cd backend && ./deploy-functions.sh",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d frontend/dist"
   },
   "keywords": [
     "campus",

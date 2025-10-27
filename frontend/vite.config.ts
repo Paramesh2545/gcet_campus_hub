@@ -4,7 +4,7 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-      base: '/',
+      base: '/gcet_campus_hub/',
       // Removed API key exposure for security
       // define: {
       //   'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),

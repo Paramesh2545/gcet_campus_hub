@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://Paramesh2545.github.io/gcet_campus_hub",
+  "homepage": "https://Paramesh2545.github.io/gcet_campus_hub/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

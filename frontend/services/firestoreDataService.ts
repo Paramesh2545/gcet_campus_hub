@@ -223,8 +223,14 @@ export const firestoreDataService = {
       });
   
       return events;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error getting events:", error);
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
+      }
+      // For other errors (permission denied, etc.), return empty array
       return [];
     }
   },
@@ -246,8 +252,14 @@ export const firestoreDataService = {
       const clubsRef = collection(db, COLLECTIONS.CLUBS);
       const snapshot = await getDocs(clubsRef);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Club));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting clubs:', error);
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
+      }
+      // For other errors (permission denied, etc.), return empty array
       return [];
     }
   },
@@ -263,6 +275,11 @@ export const firestoreDataService = {
       if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
         console.warn('Users require authentication - skipping for now');
         return [];
+      }
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
       }
       console.error('Error getting users:', error);
       return [];
@@ -280,8 +297,14 @@ export const firestoreDataService = {
       const leadershipRef = collection(db, COLLECTIONS.LEADERSHIP);
       const snapshot = await getDocs(leadershipRef);
       return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as any) } as LeadershipMember));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting leadership:', error);
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
+      }
+      // For other errors (permission denied, etc.), return empty array
       return [];
     }
   },
@@ -292,8 +315,14 @@ export const firestoreDataService = {
       const annualEventsRef = collection(db, COLLECTIONS.ANNUAL_EVENTS);
       const snapshot = await getDocs(annualEventsRef);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AnnualEvent));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting annual events:', error);
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
+      }
+      // For other errors (permission denied, etc.), return empty array
       return [];
     }
   },
@@ -304,8 +333,14 @@ export const firestoreDataService = {
       const newsRef = collection(db, COLLECTIONS.NEWS);
       const snapshot = await getDocs(newsRef);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsArticle));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting news:', error);
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
+      }
+      // For other errors (permission denied, etc.), return empty array
       return [];
     }
   },
@@ -316,8 +351,14 @@ export const firestoreDataService = {
       const externalEventsRef = collection(db, COLLECTIONS.EXTERNAL_EVENTS);
       const snapshot = await getDocs(externalEventsRef);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExternalEvent));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting external events:', error);
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
+      }
+      // For other errors (permission denied, etc.), return empty array
       return [];
     }
   },
@@ -333,6 +374,11 @@ export const firestoreDataService = {
       if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
         console.warn('Notifications require authentication - skipping for now');
         return [];
+      }
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
       }
       console.error('Error getting notifications:', error);
       return [];
@@ -350,6 +396,11 @@ export const firestoreDataService = {
       if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
         console.warn('Applications require authentication - skipping for now');
         return [];
+      }
+      // Check if it's a network error
+      if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
+        console.error("Network error - Firebase is unreachable");
+        throw new Error("Network connection failed. Please check your internet connection.");
       }
       console.error('Error getting applications:', error);
       return [];

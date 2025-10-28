@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom';
 import { User, Application, Event as EventType, Club, ClubTeamMember, AnnualEvent, Notification, LeadershipMember, NewsArticle, ExternalEvent } from './types';
-import * as service from './services/mockService';
 import { firebaseAuthService, getUserWithProfile, userProfileService, createGuestUserProfile } from './services/firebaseAuthService';
 import { auth } from './firebaseConfig';
 import { firestoreDataService, clubApplicationsService } from './services/firestoreDataService';

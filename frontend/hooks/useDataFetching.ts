@@ -64,8 +64,14 @@ export const useDataFetching = ({ user, enableRealtime = true }: UseDataFetching
         }));
         
         hasInitialized.current = true;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch initial data:", error);
+        // Don't update data state if there's a network error - preserve existing data
+        // This prevents data loss when Firebase is unreachable
+        if (error.message?.includes('Network connection failed')) {
+          console.warn("Network error detected - preserving existing data");
+          // Optionally show a user notification here
+        }
       } finally {
         setIsLoading(false);
       }
@@ -94,8 +100,12 @@ export const useDataFetching = ({ user, enableRealtime = true }: UseDataFetching
       }));
       
       hasSecondaryLoaded.current = true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch secondary data:", error);
+      // Don't update data state if there's a network error - preserve existing data
+      if (error.message?.includes('Network connection failed')) {
+        console.warn("Network error detected - preserving existing secondary data");
+      }
     } finally {
       setIsSecondaryLoading(false);
     }
@@ -130,8 +140,12 @@ export const useDataFetching = ({ user, enableRealtime = true }: UseDataFetching
         }));
         
         hasUserDataLoaded.current = true;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch user data:", error);
+        // Don't update data state if there's a network error - preserve existing data
+        if (error.message?.includes('Network connection failed')) {
+          console.warn("Network error detected - preserving existing user data");
+        }
       } finally {
         setIsUserDataLoading(false);
       }

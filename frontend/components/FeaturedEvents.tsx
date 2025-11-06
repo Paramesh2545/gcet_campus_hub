@@ -15,14 +15,19 @@ interface FeaturedEventsProps {
 }
 
 const FeaturedEvents: React.FC<FeaturedEventsProps> = ({ events }) => {
+  // All hooks must be called before any conditional returns
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
   
-  const featuredEvents = events.filter(
-    (e) => e.isFeatured && e.status !== EventStatus.Past
-  );
+  // Calculate featured events - handle empty arrays
+  const featuredEvents = (!events || events.length === 0) 
+    ? [] 
+    : events.filter(
+        (e) => e.isFeatured && e.status !== EventStatus.Past
+      );
 
   const goToPrevious = () => {
+    if (featuredEvents.length === 0) return;
     const isFirstSlide = currentIndex === 0;
     const newIndex = isFirstSlide ? featuredEvents.length - 1 : currentIndex - 1;
     setCurrentIndex(newIndex);
@@ -40,11 +45,15 @@ const FeaturedEvents: React.FC<FeaturedEventsProps> = ({ events }) => {
   }
 
   useEffect(() => {
+    if (featuredEvents.length === 0) return;
     const slideInterval = setInterval(goToNext, 7000);
     return () => clearInterval(slideInterval);
-  }, [goToNext]);
+  }, [goToNext, featuredEvents.length]);
 
-  if (!featuredEvents.length) return null;
+  // Early return after all hooks are called
+  if (!events || events.length === 0 || featuredEvents.length === 0) {
+    return null; // Don't render until events are loaded
+  }
 
   const activeEvent = featuredEvents[currentIndex];
 

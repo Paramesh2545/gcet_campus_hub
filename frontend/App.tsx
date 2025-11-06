@@ -46,7 +46,12 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Use optimized data fetching hook
+  // Determine what data to fetch based on current route
+  const isHomePage = location.pathname === '/';
+  const isClubsPage = location.pathname.startsWith('/clubs');
+  const isEventsPage = location.pathname.startsWith('/events');
+  
+  // Use optimized data fetching hook - only fetch what's needed for current route
   const {
     events,
     clubs,
@@ -61,7 +66,15 @@ const App: React.FC = () => {
     updateEvents,
     updateClubs,
     updateApplications,
-  } = useDataFetching({ user, enableRealtime: false });
+  } = useDataFetching({ 
+    user, 
+    enableRealtime: false,
+    // Home page: only fetch users
+    fetchUsers: isHomePage,
+    fetchEvents: !isHomePage && (isEventsPage || isClubsPage),
+    fetchClubs: !isHomePage && isClubsPage,
+    fetchLeadership: !isHomePage,
+  });
 
 
   // Auth state listener - only runs once
@@ -489,7 +502,7 @@ const App: React.FC = () => {
         <ScrollToTop />
         <div className="animate-fadeIn">
           <Routes>
-            <Route path="/" element={<Home events={events} clubs={clubs} leadership={leadership} />} />
+            <Route path="/" element={<Home />} />
             <Route path="/clubs" element={
               <AllClubs
                 clubs={clubs}

@@ -1,4 +1,5 @@
 import { Event, User } from '../types';
+import { loggedFetch } from '../utils/apiLogger';
 
 export interface RazorpayPaymentRequest {
   amount: number;
@@ -63,7 +64,7 @@ class RazorpayService {
 
   async createPaymentOrder(paymentRequest: RazorpayPaymentRequest): Promise<RazorpayPaymentResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/createRazorpayOrder`, {
+      const response = await loggedFetch(`${this.baseUrl}/createRazorpayOrder`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +87,7 @@ class RazorpayService {
 
   async verifyPaymentStatus(orderId: string): Promise<RazorpayPaymentStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/getRazorpayPaymentStatus?orderId=${orderId}`, {
+      const response = await loggedFetch(`${this.baseUrl}/getRazorpayPaymentStatus?orderId=${orderId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ class RazorpayService {
 
   async handlePaymentCallback(callbackData: any): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/handleRazorpayCallback`, {
+      const response = await loggedFetch(`${this.baseUrl}/handleRazorpayCallback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

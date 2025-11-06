@@ -27,6 +27,7 @@ import {
 } from '../constants';
 import { Event, Club, User, LeadershipMember, AnnualEvent, NewsArticle, ExternalEvent, Notification, Application, EventStatus } from '../types';
 import { removeUndefinedValues } from '../utils/firestoreUtils';
+import { apiLogger } from '../utils/apiLogger';
 
 // Collection names
 const COLLECTIONS = {
@@ -210,50 +211,74 @@ export const firestoreDataService = {
   // getting events
   getEvents: async (): Promise<Event[]> => {
     try {
-      const eventsRef = collectionGroup(db, "clubEvents");
-      const snapshot = await getDocs(eventsRef);
-  
-      const events = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          organizerClubId: data.organizerClubId || doc.ref.parent.parent?.id, // ✅ ensure clubId is always present
-        } as Event;
-      });
-  
-      return events;
+      const events = await apiLogger.logFirestoreOperation(
+        'getEvents',
+        'clubEvents (collectionGroup)',
+        async () => {
+          const eventsRef = collectionGroup(db, "clubEvents");
+          const snapshot = await getDocs(eventsRef);
+      
+          const eventsData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const eventData = {
+              id: doc.id,
+              ...data,
+              organizerClubId: data.organizerClubId || doc.ref.parent.parent?.id, // ✅ ensure clubId is always present
+            } as Event;
+            
+            // Validate that essential fields are present
+            if (!eventData.id) {
+              console.warn('⚠️ Event missing id:', doc.id, data);
+            }
+            
+            return eventData;
+          });
+      
+          console.log(`📊 Fetched ${eventsData.length} events from Firestore`);
+          return eventsData;
+        }
+      );
+      
+      return events || [];
     } catch (error: any) {
-      console.error("Error getting events:", error);
       // Check if it's a network error
       if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
-        console.error("Network error - Firebase is unreachable");
+        console.error("❌ Network error - Firebase is unreachable");
         throw new Error("Network connection failed. Please check your internet connection.");
       }
-      // For other errors (permission denied, etc.), return empty array
+      // For other errors (permission denied, etc.), log and return empty array
+      console.error("❌ Error fetching events:", error.code || error.message);
       return [];
     }
   },
   getClubEvents: async (clubId: string): Promise<Event[]> => {
-    try {
-      const clubRef = doc(db, COLLECTIONS.CLUBS, clubId);
-      const clubEventsRef = collection(clubRef, 'clubEvents');
-      const snapshot = await getDocs(clubEventsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-    } catch (error) {
+    return apiLogger.logFirestoreOperation(
+      'getClubEvents',
+      `clubs/${clubId}/clubEvents`,
+      async () => {
+        const clubRef = doc(db, COLLECTIONS.CLUBS, clubId);
+        const clubEventsRef = collection(clubRef, 'clubEvents');
+        const snapshot = await getDocs(clubEventsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+      },
+      { clubId }
+    ).catch((error) => {
       console.error('Error getting club events:', error);
       return [];
-    }
+    });
   },
 
   // Get all clubs
   getClubs: async (): Promise<Club[]> => {
-    try {
-      const clubsRef = collection(db, COLLECTIONS.CLUBS);
-      const snapshot = await getDocs(clubsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Club));
-    } catch (error: any) {
-      console.error('Error getting clubs:', error);
+    return apiLogger.logFirestoreOperation(
+      'getClubs',
+      COLLECTIONS.CLUBS,
+      async () => {
+        const clubsRef = collection(db, COLLECTIONS.CLUBS);
+        const snapshot = await getDocs(clubsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Club));
+      }
+    ).catch((error: any) => {
       // Check if it's a network error
       if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
         console.error("Network error - Firebase is unreachable");
@@ -261,16 +286,20 @@ export const firestoreDataService = {
       }
       // For other errors (permission denied, etc.), return empty array
       return [];
-    }
+    });
   },
 
   // Get all users
   getUsers: async (): Promise<User[]> => {
-    try {
-      const usersRef = collection(db, COLLECTIONS.USERS);
-      const snapshot = await getDocs(usersRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-    } catch (error: any) {
+    return apiLogger.logFirestoreOperation(
+      'getUsers',
+      COLLECTIONS.USERS,
+      async () => {
+        const usersRef = collection(db, COLLECTIONS.USERS);
+        const snapshot = await getDocs(usersRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+      }
+    ).catch((error: any) => {
       // Handle permission errors gracefully
       if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
         console.warn('Users require authentication - skipping for now');
@@ -283,7 +312,7 @@ export const firestoreDataService = {
       }
       console.error('Error getting users:', error);
       return [];
-    }
+    });
   },
   getStudentByRollNumber: async (rollNumber: string): Promise<User | null> => {
     const users = await firestoreDataService.getUsers();
@@ -293,12 +322,15 @@ export const firestoreDataService = {
 
   // Get leadership
   getLeadership: async (): Promise<LeadershipMember[]> => {
-    try {
-      const leadershipRef = collection(db, COLLECTIONS.LEADERSHIP);
-      const snapshot = await getDocs(leadershipRef);
-      return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as any) } as LeadershipMember));
-    } catch (error: any) {
-      console.error('Error getting leadership:', error);
+    return apiLogger.logFirestoreOperation(
+      'getLeadership',
+      COLLECTIONS.LEADERSHIP,
+      async () => {
+        const leadershipRef = collection(db, COLLECTIONS.LEADERSHIP);
+        const snapshot = await getDocs(leadershipRef);
+        return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as any) } as LeadershipMember));
+      }
+    ).catch((error: any) => {
       // Check if it's a network error
       if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
         console.error("Network error - Firebase is unreachable");
@@ -306,17 +338,20 @@ export const firestoreDataService = {
       }
       // For other errors (permission denied, etc.), return empty array
       return [];
-    }
+    });
   },
 
   // Get annual events
   getAnnualEvents: async (): Promise<AnnualEvent[]> => {
-    try {
-      const annualEventsRef = collection(db, COLLECTIONS.ANNUAL_EVENTS);
-      const snapshot = await getDocs(annualEventsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AnnualEvent));
-    } catch (error: any) {
-      console.error('Error getting annual events:', error);
+    return apiLogger.logFirestoreOperation(
+      'getAnnualEvents',
+      COLLECTIONS.ANNUAL_EVENTS,
+      async () => {
+        const annualEventsRef = collection(db, COLLECTIONS.ANNUAL_EVENTS);
+        const snapshot = await getDocs(annualEventsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AnnualEvent));
+      }
+    ).catch((error: any) => {
       // Check if it's a network error
       if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
         console.error("Network error - Firebase is unreachable");
@@ -324,17 +359,20 @@ export const firestoreDataService = {
       }
       // For other errors (permission denied, etc.), return empty array
       return [];
-    }
+    });
   },
 
   // Get news
   getNews: async (): Promise<NewsArticle[]> => {
-    try {
-      const newsRef = collection(db, COLLECTIONS.NEWS);
-      const snapshot = await getDocs(newsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsArticle));
-    } catch (error: any) {
-      console.error('Error getting news:', error);
+    return apiLogger.logFirestoreOperation(
+      'getNews',
+      COLLECTIONS.NEWS,
+      async () => {
+        const newsRef = collection(db, COLLECTIONS.NEWS);
+        const snapshot = await getDocs(newsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsArticle));
+      }
+    ).catch((error: any) => {
       // Check if it's a network error
       if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
         console.error("Network error - Firebase is unreachable");
@@ -342,17 +380,20 @@ export const firestoreDataService = {
       }
       // For other errors (permission denied, etc.), return empty array
       return [];
-    }
+    });
   },
 
   // Get external events
   getExternalEvents: async (): Promise<ExternalEvent[]> => {
-    try {
-      const externalEventsRef = collection(db, COLLECTIONS.EXTERNAL_EVENTS);
-      const snapshot = await getDocs(externalEventsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExternalEvent));
-    } catch (error: any) {
-      console.error('Error getting external events:', error);
+    return apiLogger.logFirestoreOperation(
+      'getExternalEvents',
+      COLLECTIONS.EXTERNAL_EVENTS,
+      async () => {
+        const externalEventsRef = collection(db, COLLECTIONS.EXTERNAL_EVENTS);
+        const snapshot = await getDocs(externalEventsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExternalEvent));
+      }
+    ).catch((error: any) => {
       // Check if it's a network error
       if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('Failed to get document')) {
         console.error("Network error - Firebase is unreachable");
@@ -360,16 +401,20 @@ export const firestoreDataService = {
       }
       // For other errors (permission denied, etc.), return empty array
       return [];
-    }
+    });
   },
 
   // Get notifications
   getNotifications: async (): Promise<Notification[]> => {
-    try {
-      const notificationsRef = collection(db, COLLECTIONS.NOTIFICATIONS);
-      const snapshot = await getDocs(notificationsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
-    } catch (error: any) {
+    return apiLogger.logFirestoreOperation(
+      'getNotifications',
+      COLLECTIONS.NOTIFICATIONS,
+      async () => {
+        const notificationsRef = collection(db, COLLECTIONS.NOTIFICATIONS);
+        const snapshot = await getDocs(notificationsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+      }
+    ).catch((error: any) => {
       // Handle permission errors gracefully
       if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
         console.warn('Notifications require authentication - skipping for now');
@@ -382,16 +427,20 @@ export const firestoreDataService = {
       }
       console.error('Error getting notifications:', error);
       return [];
-    }
+    });
   },
 
   // Get applications
   getApplications: async (): Promise<Application[]> => {
-    try {
-      const applicationsRef = collection(db, COLLECTIONS.APPLICATIONS);
-      const snapshot = await getDocs(applicationsRef);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
-    } catch (error: any) {
+    return apiLogger.logFirestoreOperation(
+      'getApplications',
+      COLLECTIONS.APPLICATIONS,
+      async () => {
+        const applicationsRef = collection(db, COLLECTIONS.APPLICATIONS);
+        const snapshot = await getDocs(applicationsRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+      }
+    ).catch((error: any) => {
       // Handle permission errors gracefully
       if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
         console.warn('Applications require authentication - skipping for now');
@@ -404,7 +453,7 @@ export const firestoreDataService = {
       }
       console.error('Error getting applications:', error);
       return [];
-    }
+    });
   },
 
   // Create a new application
@@ -436,33 +485,38 @@ export const firestoreDataService = {
 
   // Read applications for a specific club from subcollection
   getClubApplications: async (clubId: string): Promise<Application[]> => {
-    try {
-      // Try fetching from /clubs/{clubId}/applications subcollection
-      const clubRef = doc(db, COLLECTIONS.CLUBS, clubId);
-      const clubAppsRef = collection(clubRef, 'applications');
-      const snapshot = await getDocs(clubAppsRef);
-      if (snapshot.size > 0) {
-        console.log(`Fetched ${snapshot.size} applications for club ${clubId} (subcollection)`);
-        return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as any) } as Application));
-      }
-      // Fallback: Try fetching from top-level /applications collection and filter by clubId
-      const applicationsRef = collection(db, COLLECTIONS.APPLICATIONS);
-      const allAppsSnap = await getDocs(applicationsRef);
-      // Defensive: clubId may be string or number, always compare as string
-      const filteredApps = allAppsSnap.docs
-        .map(d => ({ id: d.id, ...(d.data() as any) } as Application))
-        .filter(app => String(app.clubId) === String(clubId));
-      console.log(`Fetched ${filteredApps.length} applications for club ${clubId} (top-level fallback)`);
-      // Debug: log all clubIds found
-      if (filteredApps.length === 0) {
-        const allClubIds = allAppsSnap.docs.map(d => d.data().clubId);
-        console.log('All clubIds in top-level applications:', allClubIds);
-      }
-      return filteredApps;
-    } catch (error) {
+    return apiLogger.logFirestoreOperation(
+      'getClubApplications',
+      `clubs/${clubId}/applications`,
+      async () => {
+        // Try fetching from /clubs/{clubId}/applications subcollection
+        const clubRef = doc(db, COLLECTIONS.CLUBS, clubId);
+        const clubAppsRef = collection(clubRef, 'applications');
+        const snapshot = await getDocs(clubAppsRef);
+        if (snapshot.size > 0) {
+          console.log(`Fetched ${snapshot.size} applications for club ${clubId} (subcollection)`);
+          return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as any) } as Application));
+        }
+        // Fallback: Try fetching from top-level /applications collection and filter by clubId
+        const applicationsRef = collection(db, COLLECTIONS.APPLICATIONS);
+        const allAppsSnap = await getDocs(applicationsRef);
+        // Defensive: clubId may be string or number, always compare as string
+        const filteredApps = allAppsSnap.docs
+          .map(d => ({ id: d.id, ...(d.data() as any) } as Application))
+          .filter(app => String(app.clubId) === String(clubId));
+        console.log(`Fetched ${filteredApps.length} applications for club ${clubId} (top-level fallback)`);
+        // Debug: log all clubIds found
+        if (filteredApps.length === 0) {
+          const allClubIds = allAppsSnap.docs.map(d => d.data().clubId);
+          console.log('All clubIds in top-level applications:', allClubIds);
+        }
+        return filteredApps;
+      },
+      { clubId }
+    ).catch((error) => {
       console.error('Error getting club applications:', error);
       return [];
-    }
+    });
   },
 
   // Update club details (members and settings)
@@ -622,19 +676,24 @@ export const firestoreDataService = {
   },
 
   getClubById: async (clubId: string): Promise<Club | null> => {
-    try {
-      const clubRef = doc(db, COLLECTIONS.CLUBS, clubId);
-      const clubSnap = await getDoc(clubRef);
-      if (clubSnap.exists()) {
-        return { id: clubSnap.id, ...clubSnap.data() } as Club;
-      } else {
-        console.warn(`Club with ID ${clubId} not found.`);
-        return null;
-      }
-    } catch (error) {
+    return apiLogger.logFirestoreOperation(
+      'getClubById',
+      `clubs/${clubId}`,
+      async () => {
+        const clubRef = doc(db, COLLECTIONS.CLUBS, clubId);
+        const clubSnap = await getDoc(clubRef);
+        if (clubSnap.exists()) {
+          return { id: clubSnap.id, ...clubSnap.data() } as Club;
+        } else {
+          console.warn(`Club with ID ${clubId} not found.`);
+          return null;
+        }
+      },
+      { clubId }
+    ).catch((error) => {
       console.error('Error getting club by ID:', error);
       return null;
-    }
+    });
   },
 
   // Update event (including marking as past and adding winner/images)

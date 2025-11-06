@@ -76,6 +76,11 @@ interface LeadershipSectionProps {
 }
 
 const LeadershipSection: React.FC<LeadershipSectionProps> = ({ leadership }) => {
+  // Handle empty leadership array (during lazy loading)
+  if (!leadership || leadership.length === 0) {
+    return null; // Don't render until leadership data is loaded
+  }
+  
   return (
     // Removed overflow-hidden to prevent the card's hover scale effect from being clipped
     <section className="py-24 bg-gradient-to-b from-slate-950 to-slate-900">

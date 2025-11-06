@@ -4,8 +4,13 @@ import SectionHeader from './SectionHeader';
 import { Club } from '../types';
 import { firestoreDataService } from '../services/firestoreDataService';
 
-const CallToAction: React.FC<{ clubs: Club[]; index: number }> = ({ clubs, index }) =>{
-    const midPoint = Math.ceil(clubs.length / 2);
+const CallToAction: React.FC<{ clubs: Club[] }> = ({ clubs }) =>{
+  // Handle empty clubs array (during lazy loading)
+  if (!clubs || clubs.length === 0) {
+    return null; // Don't render until clubs are loaded
+  }
+  
+  const midPoint = Math.ceil(clubs.length / 2);
   const outerLogos = clubs.slice(0, midPoint); 
   const innerLogos = clubs.slice(midPoint);
 

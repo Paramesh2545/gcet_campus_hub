@@ -33,8 +33,15 @@ interface ClubsSectionProps {
 }
 
 const ClubsSection: React.FC<ClubsSectionProps> = ({ clubs }) => {
-  const featuredClubs = clubs.slice(0, 4);
+  // All hooks must be called before any conditional returns
   const navigate = useNavigate();
+  
+  // Handle empty clubs array (during lazy loading)
+  if (!clubs || clubs.length === 0) {
+    return null; // Don't render until clubs are loaded
+  }
+  
+  const featuredClubs = clubs.slice(0, 4);
 
   return (
     <section className="py-24 bg-slate-900">

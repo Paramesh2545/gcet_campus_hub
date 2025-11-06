@@ -1,4 +1,5 @@
 import { Event, User } from '../types';
+import { loggedFetch } from '../utils/apiLogger';
 
 export interface CashfreePaymentRequest {
   amount: number;
@@ -40,7 +41,7 @@ class CashfreeService {
    */
   async createPaymentSession(paymentRequest: CashfreePaymentRequest): Promise<CashfreePaymentResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/createCashfreeSession`, {
+      const response = await loggedFetch(`${this.baseUrl}/createCashfreeSession`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ class CashfreeService {
    */
   async verifyPaymentStatus(orderId: string): Promise<CashfreePaymentStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/getCashfreePaymentStatus?orderId=${orderId}`, {
+      const response = await loggedFetch(`${this.baseUrl}/getCashfreePaymentStatus?orderId=${orderId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +113,7 @@ class CashfreeService {
    */
   async handlePaymentCallback(callbackData: any): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/handleCashfreeCallback`, {
+      const response = await loggedFetch(`${this.baseUrl}/handleCashfreeCallback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

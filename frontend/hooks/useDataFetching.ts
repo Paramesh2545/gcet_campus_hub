@@ -18,9 +18,20 @@ interface DataState {
 interface UseDataFetchingOptions {
   user: User | null;
   enableRealtime?: boolean;
+  fetchEvents?: boolean;
+  fetchClubs?: boolean;
+  fetchLeadership?: boolean;
+  fetchUsers?: boolean;
 }
 
-export const useDataFetching = ({ user, enableRealtime = true }: UseDataFetchingOptions) => {
+export const useDataFetching = ({ 
+  user, 
+  enableRealtime = true,
+  fetchEvents = true,
+  fetchClubs = true,
+  fetchLeadership = true,
+  fetchUsers = false
+}: UseDataFetchingOptions) => {
   const [data, setData] = useState<DataState>({
     events: [],
     clubs: [],
@@ -43,24 +54,74 @@ export const useDataFetching = ({ user, enableRealtime = true }: UseDataFetching
   const hasUserDataLoaded = useRef(false);
   const realtimeCleanup = useRef<(() => void) | null>(null);
 
-  // Initial data loading (critical data only)
+  // Track what data has been fetched to handle route changes
+  const fetchedFlags = useRef({ fetchEvents: false, fetchClubs: false, fetchLeadership: false, fetchUsers: false });
+
+  // Initial data loading (critical data only) - conditional based on options
+  // Also refetches when flags change from false to true (route changes)
   useEffect(() => {
-    if (hasInitialized.current) return;
-    
     const fetchInitialData = async () => {
+      // Determine what needs to be fetched
+      const needsEvents = fetchEvents && !fetchedFlags.current.fetchEvents;
+      const needsClubs = fetchClubs && !fetchedFlags.current.fetchClubs;
+      const needsLeadership = fetchLeadership && !fetchedFlags.current.fetchLeadership;
+      const needsUsers = fetchUsers && !fetchedFlags.current.fetchUsers;
+
+      // If nothing needs to be fetched, skip
+      if (!needsEvents && !needsClubs && !needsLeadership && !needsUsers) {
+        // Mark as initialized if not already
+        if (!hasInitialized.current) {
+          hasInitialized.current = true;
+          setIsLoading(false);
+        }
+        return;
+      }
+
       setIsLoading(true);
       try {
-        const [eventsData, clubsData, leadershipData] = await Promise.all([
-          firestoreDataService.getEvents(),
-          firestoreDataService.getClubs(),
-          firestoreDataService.getLeadership()
-        ]);
+        const promises: Promise<any>[] = [];
+        const dataKeys: string[] = [];
+
+        // Only fetch what's needed and requested
+        if (needsEvents) {
+          promises.push(firestoreDataService.getEvents());
+          dataKeys.push('events');
+        }
+        if (needsClubs) {
+          promises.push(firestoreDataService.getClubs());
+          dataKeys.push('clubs');
+        }
+        if (needsLeadership) {
+          promises.push(firestoreDataService.getLeadership());
+          dataKeys.push('leadership');
+        }
+        if (needsUsers) {
+          promises.push(firestoreDataService.getUsers());
+          dataKeys.push('users');
+        }
+
+        if (promises.length === 0) {
+          hasInitialized.current = true;
+          setIsLoading(false);
+          return;
+        }
+
+        const results = await Promise.all(promises);
+        
+        const updates: any = {};
+        results.forEach((result, index) => {
+          updates[dataKeys[index]] = result;
+        });
+        
+        // Update flags to track what we've fetched
+        if (needsEvents) fetchedFlags.current.fetchEvents = true;
+        if (needsClubs) fetchedFlags.current.fetchClubs = true;
+        if (needsLeadership) fetchedFlags.current.fetchLeadership = true;
+        if (needsUsers) fetchedFlags.current.fetchUsers = true;
         
         setData(prev => ({
           ...prev,
-          events: eventsData,
-          clubs: clubsData,
-          leadership: leadershipData,
+          ...updates,
         }));
         
         hasInitialized.current = true;
@@ -78,7 +139,7 @@ export const useDataFetching = ({ user, enableRealtime = true }: UseDataFetching
     };
 
     fetchInitialData();
-  }, []);
+  }, [fetchEvents, fetchClubs, fetchLeadership, fetchUsers]);
 
   // Secondary data loading - only load when needed
   const loadSecondaryData = useCallback(async () => {

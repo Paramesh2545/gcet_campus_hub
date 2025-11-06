@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { auth } from '../firebaseConfig';
+import { loggedFetch } from '../utils/apiLogger';
 
 interface PaymentDetails {
   name: string;
@@ -129,7 +130,7 @@ const PaymentDetailsManager: React.FC<PaymentDetailsManagerProps> = ({
   };
 
   const createSubMerchant = async (): Promise<string> => {
-    const response = await fetch('https://us-central1-evnty-124fb.cloudfunctions.net/createRazorpaySubMerchant', {
+    const response = await loggedFetch('https://us-central1-evnty-124fb.cloudfunctions.net/createRazorpaySubMerchant', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
